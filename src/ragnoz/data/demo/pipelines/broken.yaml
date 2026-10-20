@@ -1,0 +1,13 @@
+system: broken
+flow: linear
+paradigm: Naive
+observability: L3
+modules:
+  indexing:
+    chunking: {operator: fixed_size, size_tokens: 1024, overlap: 0}
+  retrieval:
+    retriever: {operator: dense, embedding_language: en, top_k: 12}
+  generation:
+    generator: {operator: extractive, abstention: false}
+top_k: 12
+context_window_tokens: 8192

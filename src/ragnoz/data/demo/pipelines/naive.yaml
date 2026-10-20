@@ -1,0 +1,12 @@
+system: naive
+flow: linear
+paradigm: Naive
+observability: L3
+modules:
+  indexing:
+    chunking: {operator: fixed_size, size_tokens: 512, overlap: 0}
+  retrieval:
+    retriever: {operator: bm25, top_k: 5}
+  generation:
+    generator: {operator: extractive, abstention: false}
+context_window_tokens: 8192

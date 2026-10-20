@@ -1,0 +1,9 @@
+catalog_version: 0.1.0
+pipelines:
+  naive: {paradigm: Naive, flow: linear, seeded_rules: [AP-05]}
+  advanced: {paradigm: Advanced, flow: linear, seeded_rules: []}
+  broken: {paradigm: Naive, flow: linear, seeded_rules: [AP-01, AP-04, AP-05, AP-07]}
+notes:
+  - "Bu dosyadaki izler deterministik gösterim fikstürleridir; gerçek bir RAG ürününün ölçümü değildir."
+  - "MVP çekirdeği: AP-01, AP-02, AP-03, AP-04, AP-05, AP-07, AP-08, AP-09, AP-12, AP-13, AP-18."
+  - "Tam 19 kural kataloğu ve AP-06, AP-10, AP-11, AP-14, AP-15, AP-16, AP-17, AP-19 sonraki sürümdedir."
