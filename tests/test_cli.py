@@ -104,3 +104,65 @@ def test_golden_quickstart_reads_stdin_when_no_source_given(tmp_path: Path):
     written = [json.loads(line) for line in output.read_text().splitlines()]
     assert written[0]["expected_answer"] == "Paris"
     assert "Sıradaki adım" in result.output
+
+
+def test_golden_quickstart_empty_input_exits_nonzero(tmp_path: Path):
+    output = tmp_path / "golden.jsonl"
+    result = runner.invoke(app, ["golden", "quickstart", "--output", str(output)], input="")
+    assert result.exit_code == 1
+    assert "boş veya tanınmadı" in result.output
+    assert not output.exists()
+
+
+def test_golden_quickstart_all_rows_invalid_exits_nonzero(tmp_path: Path):
+    source = tmp_path / "qa.csv"
+    source.write_text("question,answer,type\nQ1?,A1,not-a-real-type\nQ2?,A2,also-bogus\n", encoding="utf-8")
+    output = tmp_path / "golden.jsonl"
+    result = runner.invoke(app, ["golden", "quickstart", "--from", str(source), "--output", str(output)])
+    assert result.exit_code == 1, result.output
+    assert "satır" in result.output
+    assert "Hiçbir geçerli kayıt üretilemedi" in result.output
+
+
+def test_golden_validate_happy_path_reports_count_and_hash(tmp_path: Path):
+    golden = tmp_path / "golden.jsonl"
+    golden.write_text(json.dumps({"id": "Q1", "question": "Capital?", "expected_answer": "Paris"}) + "\n", encoding="utf-8")
+    result = runner.invoke(app, ["golden", "validate", str(golden)])
+    assert result.exit_code == 0, result.output
+    assert "1 kayıt" in result.output
+    assert "SHA-256" in result.output
+
+
+def test_golden_validate_reports_issues_and_exits_nonzero(tmp_path: Path):
+    golden = tmp_path / "golden.jsonl"
+    row = json.dumps({"id": "Q1", "question": "Capital?", "expected_answer": "Paris"})
+    golden.write_text(row + "\n" + row + "\n", encoding="utf-8")
+    result = runner.invoke(app, ["golden", "validate", str(golden)])
+    assert result.exit_code == 1
+    assert "yinelenen ID" in result.output
+
+
+def test_golden_validate_unreadable_golden_exits_with_error_message(tmp_path: Path):
+    golden = tmp_path / "golden.yaml"
+    golden.write_text("just a plain string, not a list or mapping\n", encoding="utf-8")
+    result = runner.invoke(app, ["golden", "validate", str(golden)])
+    assert result.exit_code == 1
+    assert "Altın seti okunamadı" in result.output
+
+
+def test_triage_without_data_unmatched_complaint_shows_not_found_panel():
+    result = runner.invoke(app, ["triage", "bugün hava çok güzel"])
+    assert result.exit_code == 0, result.output
+    assert "Yönlendirme bulunamadı" in result.output
+    assert "golden quickstart" in result.output
+
+
+def test_triage_with_empty_golden_and_traces_does_not_crash(tmp_path: Path):
+    golden = tmp_path / "empty_golden.jsonl"
+    traces = tmp_path / "empty_traces.jsonl"
+    golden.write_text("", encoding="utf-8")
+    traces.write_text("", encoding="utf-8")
+    result = runner.invoke(app, ["triage", "cevaplar alakasız geliyor", "--golden", str(golden), "--traces", str(traces)])
+    assert result.exit_code == 0, result.output
+    assert "Eşleşen semptom(lar): irrelevant_answer" in result.output
+    assert "eşleşen ölçülmüş bulgu yok" in result.output

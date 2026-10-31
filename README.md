@@ -61,16 +61,20 @@ Aşama hataları `SYS_ERROR` olarak izlenir; ham hata metni iz dosyasına yazıl
 ragnoz demo init
 ragnoz demo run --pipeline all|naive|advanced|broken
 ragnoz golden validate GOLDEN.jsonl [--corpus pages.json]
+ragnoz golden quickstart [--from qa.csv|qa.jsonl|qa.md] [--output golden.jsonl] [--corpus pages.json]
 ragnoz import TRACES.jsonl [--mapping mapping.json] [--output .ragnoz/imported.jsonl]
 ragnoz run --golden GOLDEN.jsonl --adapter package.module:factory [--no-cache]
 ragnoz eval --golden GOLDEN.jsonl --traces TRACES.jsonl
 ragnoz compare --before A.jsonl --after B.jsonl --golden GOLDEN.jsonl
 ragnoz diagnose --golden GOLDEN.jsonl --traces TRACES.jsonl [--architecture architecture.yaml]
+ragnoz triage "derdini kendi kelimelerinle anlat" [--golden GOLDEN.jsonl --traces TRACES.jsonl]
 ragnoz report --golden GOLDEN.jsonl --traces TRACES.jsonl [--redact]
 ragnoz experiment run REC-ID --golden GOLDEN.jsonl --before A.jsonl --after B.jsonl
 ragnoz experiment run REC-ID --golden GOLDEN.jsonl --adapter package.module:factory
 ragnoz ablate --type remove|swap|oracle-context|no-context --module MODULE --adapter package.module:factory --golden GOLDEN.jsonl
 ```
+
+Henüz golden set'in yoksa `golden quickstart`, gevşek bir CSV/JSONL/markdown soru-cevap listesini şemaya uygun bir `golden.jsonl`'a çevirir ve otomatik olarak `golden validate` çalıştırır; eksik/bozuk satırları satır numarasıyla bildirir. Derdini "elindeki golden set" veya "rule id" dilinde değil, kendi kelimelerinle anlatmak istiyorsan `triage` kullanılır — aşağıdaki örneklere bakın.
 
 `experiment run` adapter yolunda `with_experiment(rec_id)` hook’u; `ablate` yolunda `with_ablation(type, module)` hook’u ister. Hook yoksa araç sonucu `inconclusive` bırakır, başarılı deney gibi göstermez. Deney geçiş tablosu, exact McNemar sonucu ve yüzde 95 eşleştirilmiş bootstrap aralığı rapora yazılır. Başarı için önceden belirlenmiş eşiklerin geçilmesi gerekir; aksi halde öneri yüksek güvene yükseltilmez.
 
@@ -81,6 +85,63 @@ ragnoz ablate --type remove|swap|oracle-context|no-context --module MODULE --ada
 Getirme için aday listesi ve nihai/rerank sonrası liste ayrı raporlanır: `candidate_hit@k`, `hit@k`, `candidate_recall@k`, `recall@k`, `candidate_ndcg@k`, `ndcg@k`, `mrr@k` ve `rerank_gain@k` (`k=1,3,5,10`). Doğruluk ve hit oranlarında Wilson aralığı; eşleştirilmiş farkta bootstrap aralığı ve doğru/yanlış geçişlerde exact McNemar testi kullanılır. `n<30` küçük örneklem uyarısı alır. Cevap kaçınma recall/precision yalnız gold’da reddetme beklenen sorular üzerinden hesaplanır. Sayılar binlik/ondalık ayraç normalizasyonu, tolerans, alt/üst sınır ve birim alanlarını destekler.
 
 Atıf, gözlem seviyesine göre ilk görünür kırılma noktasını işaretler (ör. `RETRIEVAL_MISS`, `RERANK_DROP`, `CONTEXT_DROP`, `GEN_NUMBER_EXTRACTION`, `ABSTAIN_FAIL`, `UNDETERMINED_L0`, `SYS_ERROR`). Anti-pattern motorunda PRD MVP çekirdeği AP-01, AP-02, AP-03, AP-04, AP-05, AP-07, AP-08, AP-09, AP-12, AP-13 ve AP-18 için kural sürümlü tespit bulunur. Kural eşiği/örneklem veya gerekli ablasyon gözlemi yoksa çıkarım yapılmaz.
+
+## Örnek çıktı: diagnose ve triage
+
+Aşağıdaki çıktılar gerçek komut çalıştırmalarından alınmıştır (demo fikstürleri üzerinde `ragnoz demo traces` ile üretilmiş `broken` iz dosyası kullanılmıştır — bu nedenle sentetiktir, canlı sistem ölçümü değildir).
+
+### `ragnoz diagnose` — tam, ölçülmüş teşhis
+
+```text
+$ ragnoz diagnose --golden examples/demo/golden.jsonl --traces .ragnoz/demo-traces/broken.jsonl \
+    --architecture examples/demo/pipelines/broken.yaml
+
+Mimari: Naive · akış: linear · gözlem: L3
+Bulgular: 4 · öneriler: 4
+AP-05 Reddetme mekanizması yok / zayıf — cevapsız soru 8/8 reddedilmedi (eşik ≥5 cevapsız soru ve reddetme duyarlılığı <0.5)
+AP-01 Parça × top_k bağlam bütçesini aşıyor — 1024×12=12288 token; pencere bütçesi=7372 (eşik parça×top_k ≤0.9×8192)
+AP-04 top_k yüksek: dikkat dağılması olasılığı — top_k=12; bağlam kanıtlı yanlış=5 (eşik top_k≥10 ve ≥5 kanıtlı yanlış)
+AP-07 Soru ve belge dili uyumsuzluğu olabilir — aday hit en=0.00, tr=0.50 (eşik dil farkı ≥0.20; grup başına ≥10)
+rec-001  generation: Reddetme kuralı ve yapılandırılmış bulunamadı yanıtı ekleyin.
+rec-002  context: Parça boyutunu veya top_k'yı düşürüp truncation oranını ölçün.
+rec-003  post_retrieval.context: top_k=3/5/10 taraması yapın; sonucu ayrı doğrulama sorularında teyit edin.
+rec-004  retrieval.embedding: Çok dilli gömme modeli veya BM25 hibrit kolunu deneyin.
+Tanı dosyası: .ragnoz/diagnosis.json
+```
+
+Her bulgu ve öneri ölçülmüş bir değer (`measured`), bir eşik (`threshold`) ve bir güven derecesi taşır; `diagnosis.json` içinde ayrıca `cannot_infer` listesi hangi iddiaların bu veriden çıkarılamayacağını açıkça sayar.
+
+### `ragnoz triage` — veri yokken (yalnız yönlendirme, bulgu DEĞİL)
+
+```text
+$ ragnoz triage "cevaplar alakasız geliyor"
+
+╭──── Yönlendirme (ölçülmüş bulgu DEĞİL — ne yapman gerektiğini söylemez) ─────╮
+│ Cevaplar alakasız / tutarsız geliyor                                         │
+│   Bak: indexing.chunking, post_retrieval, post_retrieval.context,            │
+│ retrieval.embedding  ·  kurallar: AP-02, AP-03, AP-04, AP-07                 │
+│   Sıradaki adım: ragnoz golden quickstart --from qa.csv (en az 5-10          │
+│ soru-cevap)                                                                  │
+╰──────────────── Gerçek, kanıtlı teşhis için: ragnoz diagnose ────────────────╯
+```
+
+Golden set ve iz dosyan yoksa `triage` sana sadece **nereye bakman gerektiğini** (modül adı, ilgili kural kimlikleri, sıradaki komut) söyler. `Guidance` tipi yapısal olarak bir düzeltme/öneri alanı taşıyamaz — bu ayrım tip seviyesinde zorlanır, metinle değil.
+
+### `ragnoz triage` — veri varken (gerçek diagnose çıktısından filtrelenmiş)
+
+```text
+$ ragnoz triage "cevaplar alakasız geliyor" --golden examples/demo/golden.jsonl \
+    --traces .ragnoz/demo-traces/broken.jsonl --architecture examples/demo/pipelines/broken.yaml
+
+Eşleşen semptom(lar): irrelevant_answer
+Bu şikayetle ilişkili, ölçülmüş bulgular (tam diagnose çıktısından filtrelendi):
+  AP-04 top_k yüksek: dikkat dağılması olasılığı — top_k=12; bağlam kanıtlı yanlış=5 (eşik top_k≥10 ve ≥5 kanıtlı yanlış)
+  AP-07 Soru ve belge dili uyumsuzluğu olabilir — aday hit en=0.00, tr=0.50 (eşik dil farkı ≥0.20; grup başına ≥10)
+  → rec-003  post_retrieval.context: top_k=3/5/10 taraması yapın; sonucu ayrı doğrulama sorularında teyit edin.
+  → rec-004  retrieval.embedding: Çok dilli gömme modeli veya BM25 hibrit kolunu deneyin.
+```
+
+Golden set ve iz dosyan varsa `triage` artık tahmin etmez: tam `ragnoz diagnose` çıktısını üretir ve şikayetinle eşleşen semptomların kuralları (`rules_by_symptom`) ile bulgu/öneri listesini filtreler. `AP-05` ve `AP-01` gibi şikayetle ilgisiz bulgular listeden düşer; hiçbiri uydurulmaz, hepsi `diagnose`'un ürettiği ölçülmüş kümenin bir alt kümesidir.
 
 ## Çıktılar ve gizlilik
 
