@@ -12,6 +12,12 @@ from ragnoz.importers import write_jsonl
 runner = CliRunner()
 
 
+def test_version_flag_prints_version_and_exits_without_requiring_a_subcommand():
+    result = runner.invoke(app, ["--version"])
+    assert result.exit_code == 0, result.output
+    assert "RAGnoz" in result.output
+
+
 def test_run_command_writes_trace_metrics_diagnosis_and_summary(tmp_path: Path):
     golden = tmp_path / "golden.jsonl"
     golden.write_text(json.dumps({"id": "Q1", "question": "Capital?", "expected_answer": "Paris",

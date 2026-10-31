@@ -153,7 +153,7 @@ def _print_metrics(metrics: dict[str, Any], title: str = "Evaluation") -> None:
         console.print("Atıf:", ", ".join(f"{key}={value}" for key, value in sorted(counts.items())))
 
 
-@app.callback()
+@app.callback(invoke_without_command=True)
 def main(version: bool = typer.Option(False, "--version", help="Sürümü göster ve çık.")) -> None:
     if version:
         from ragnoz import __version__
