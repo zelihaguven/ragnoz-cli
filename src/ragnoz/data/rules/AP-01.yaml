@@ -1,0 +1,20 @@
+id: AP-01
+title: "Parça × top_k bağlam bütçesini aşıyor"
+module: context
+confidence_default: low
+params:
+  budget_ratio: 0.9
+measured_template: "{chunk_size}×{top_k}={product} token; pencere bütçesi={budget}"
+threshold_template: "parça×top_k ≤{budget_ratio}×{context_window}"
+explanation: "Beyan edilen üst sınır bağlam penceresinin %90'ını aşıyor; fiili kesilme izi ayrıca doğrulanmalıdır."
+change: "Parça boyutunu veya top_k'yı düşürüp truncation oranını ölçün."
+alternatives: []
+risk: []
+experiment:
+  type: sweep
+  parameter: "chunk_size_tokens,top_k"
+  values: [[512, 5], [512, 8], [768, 5]]
+  success:
+    metric: truncated_rate
+    maximum: 0.01
+symptoms: [missed_long_document]

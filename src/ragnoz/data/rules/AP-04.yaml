@@ -1,0 +1,21 @@
+id: AP-04
+title: "top_k yüksek: dikkat dağılması olasılığı"
+module: post_retrieval.context
+confidence_default: low
+params:
+  min_top_k: 10
+  min_count: 5
+measured_template: "top_k={top_k}; bağlam kanıtlı yanlış={count}"
+threshold_template: "top_k≥{min_top_k} ve ≥{min_count} kanıtlı yanlış"
+explanation: "Yüksek top_k yanında kanıt bağlamda olmasına rağmen cevap yanlıştı; bu korelasyondur."
+change: "top_k=3/5/10 taraması yapın; sonucu ayrı doğrulama sorularında teyit edin."
+alternatives: []
+risk: ["Tarama çoklu karşılaştırma riski taşır; seçim ayrı sette doğrulanmalıdır."]
+experiment:
+  type: sweep
+  parameter: top_k
+  values: [3, 5, 10]
+  success:
+    metric: accuracy
+    paired: true
+symptoms: [irrelevant_answer, missed_long_document]

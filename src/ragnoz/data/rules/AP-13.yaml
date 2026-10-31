@@ -1,0 +1,20 @@
+id: AP-13
+title: "Ölçülen kazanç olmadan gereksiz karmaşıklık"
+module: module
+confidence_default: medium
+params:
+  min_latency_cost_delta: 0.20
+measured_template: "doğruluk farkı belirsiz; maliyet/gecikme +{delta_pct}"
+threshold_template: "McNemar/CI anlamlı kazanç göstermiyor ve maliyet ≥{min_latency_cost_delta:.0%}"
+explanation: "Modülü çıkarmak doğrulukta anlamlı kayıp göstermedi ve ölçülen maliyet en az %20 arttı."
+change: "Modülü kaldırma/ucuzlatma varyantını bağımsız set üzerinde doğrulayın."
+alternatives: []
+risk: ["Maliyet ölçümü çalışma ortamına ve trafik profiline bağlıdır."]
+experiment:
+  type: remove
+  stage: module
+  success:
+    test: mcnemar_exact
+    max_regressions: 2
+# "module" ve "experiment.stage" ablasyonun hedef modülüyle teşhis anında üzerine yazılır (orijinal davranışla aynı).
+symptoms: [slow_or_expensive]

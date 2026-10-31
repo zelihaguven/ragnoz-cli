@@ -1,0 +1,20 @@
+id: AP-02
+title: "Parça sınırı kanıtı bölüyor"
+module: indexing.chunking
+confidence_default: medium
+params:
+  min_count: 3
+  min_fraction: 0.10
+measured_template: "CHUNK_BOUNDARY={count}/{total}"
+threshold_template: "≥{min_fraction:.0%} ve ≥{min_count} soru"
+explanation: "Kanıt izlerde tek bir parçada tam olarak eşleşmiyor."
+change: "Örtüşmeyi artırın veya yapı farkında parçalayıcıyı deneyin."
+alternatives: []
+risk: []
+experiment:
+  type: swap
+  stage: chunker
+  success:
+    metric: evidence_recall
+    minimum_gain: 0.05
+symptoms: [irrelevant_answer, missed_long_document]

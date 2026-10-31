@@ -1,0 +1,19 @@
+id: AP-18
+title: "Üretici bağlamdan yararlanmıyor olabilir"
+module: generation
+confidence_default: medium
+params:
+  min_traces: 5
+  max_delta: 0.02
+measured_template: "kâhin bağlam Δ={oracle_fmt}; bağlamsız Δ={no_context_fmt}"
+threshold_template: "oracle-context iyileştirmiyor ve no-context farkı <{max_delta}"
+explanation: "Ablasyonlarda bağlam kalitesi/doğrudan kaldırılması çıktıyı değiştirmedi."
+change: "Üreticiye yalnız verilen bağlamdan yanıt verme ve kaynak alıntısı kuralları ekleyin."
+alternatives: []
+risk: []
+experiment:
+  type: oracle_context
+  success:
+    metric: accuracy
+    minimum_gain: 0.02
+symptoms: [ignores_context]

@@ -1,0 +1,20 @@
+id: AP-07
+title: "Soru ve belge dili uyumsuzluğu olabilir"
+module: retrieval.embedding
+confidence_default: medium
+params:
+  min_diff: 0.20
+  min_group_size: 10
+measured_template: "aday hit {low}={rate_low}, {high}={rate_high}"
+threshold_template: "dil farkı ≥{min_diff:.2f}; grup başına ≥{min_group_size}"
+explanation: "Düşük hit oranı belirli soru dilinde yoğunlaşıyor."
+change: "Çok dilli gömme modeli veya BM25 hibrit kolunu deneyin."
+alternatives: []
+risk: []
+experiment:
+  type: swap
+  stage: retriever
+  success:
+    metric: "hit@5"
+# "success.group" teşhis anında düşük-skorlu dil koduyla üzerine yazılır (orijinal davranışla aynı).
+symptoms: [irrelevant_answer, language_mismatch]

@@ -1,0 +1,20 @@
+id: AP-08
+title: "Tam kimlikli sorgularda dense-only kaçırma"
+module: retrieval
+confidence_default: medium
+params:
+  min_exact_ids: 3
+  min_misses: 3
+measured_template: "exact-ID miss={count}/{total}"
+threshold_template: "dense-only ve ≥{min_misses} kaçırma"
+explanation: "Tam kimlik / sembol sorgularında dense-only adaylar beklenen kanıtı bulamıyor."
+change: "BM25+sparse retrieval kolunu ekleyip eşleştirilmiş top-k karşılaştırın."
+alternatives: []
+risk: []
+experiment:
+  type: swap
+  stage: retriever
+  success:
+    metric: "exact_id_hit@k"
+    paired: true
+symptoms: [exact_id_miss]

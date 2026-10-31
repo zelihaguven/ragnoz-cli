@@ -1,0 +1,10 @@
+id: DECL_MISMATCH
+title: "Beyan–davranış çelişkisi"
+module: post_retrieval
+confidence_default: medium
+params: {}
+measured_template: "Aday ve son liste sıraları aynı"
+threshold_template: "Beyan reranker içeriyor"
+explanation: "Beyan ile izler uyuşmuyor; bileşen etkisiz olabilir veya çıktısı kullanılmıyor."
+# Bu kural sadece bulgu üretir; CORE_RULES/rule_catalog listesinde yer almaz (orijinal davranışla aynı).
+symptoms: [reranker_suspect]

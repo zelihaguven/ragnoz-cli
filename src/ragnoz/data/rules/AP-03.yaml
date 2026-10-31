@@ -1,0 +1,19 @@
+id: AP-03
+title: "Yüksek aday recall'una rağmen yeniden sıralayıcı yok"
+module: post_retrieval
+confidence_default: medium
+params:
+  min_count: 5
+measured_template: "adaylarda kanıt var, son bağlamda yok: {count} soru"
+threshold_template: "L2+, ≥{min_count} soru"
+explanation: "Aday listesinde bulunan doğru kanıt bazı yanlış cevaplarda son bağlama ulaşmadı."
+change: "Cross-encoder yeniden sıralayıcı ekleyin."
+alternatives: ["RRF ağırlıklarını ayarlayın", "top_k'yı ölçerek artırın"]
+risk: []
+experiment:
+  type: swap
+  stage: reranker
+  success:
+    test: mcnemar_exact
+    alpha: 0.05
+symptoms: [irrelevant_answer, reranker_suspect]

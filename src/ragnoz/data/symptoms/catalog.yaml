@@ -1,0 +1,31 @@
+# Kullanıcının kendi kelimeleriyle anlattığı şikayeti kurallara bağlayan, kelime
+# tabanlı (LLM'siz) eşleme. Her anahtar kelime küçük harfe çevrilip alt-dize olarak
+# aranır. Bu katalog yalnızca "nereye bakılmalı" diye yönlendirir; "ne yapılmalı"
+# demez — o kısım ölçülmüş bulgu gerektirir (bkz. ragnoz diagnose).
+irrelevant_answer:
+  label: "Cevaplar alakasız / tutarsız geliyor"
+  keywords: ["alakasız", "ilgisiz", "yanlış cevap", "hatalı cevap", "tutarsız", "saçma cevap"]
+missed_long_document:
+  label: "Uzun dokümanlarda kanıt kaçırılıyor"
+  keywords: ["uzun doküman", "uzun belge", "kaçırıyor", "bulamıyor", "parça", "chunk"]
+wrong_number:
+  label: "Sayısal/istatistiksel cevaplar hatalı"
+  keywords: ["sayı", "rakam", "istatistik", "yanlış sayı", "yanlış rakam"]
+no_refusal:
+  label: "Bilmediği soruları da cevaplıyor (uydurma)"
+  keywords: ["uydurma", "halüsinasyon", "bilmediği halde", "reddetmiyor", "her soruya cevap veriyor"]
+language_mismatch:
+  label: "Soru/doküman dili uyumsuzluğu"
+  keywords: ["ingilizce", "türkçe", "dil sorunu", "çeviri", "yabancı dil", "farklı dil"]
+exact_id_miss:
+  label: "Kod / kimlik / seri numarası aramaları kaçırılıyor"
+  keywords: ["ürün kodu", "kod numarası", "seri numara", "kimlik numarası", "exact id"]
+slow_or_expensive:
+  label: "Yavaş veya maliyetli"
+  keywords: ["yavaş", "pahalı", "gecikme", "maliyet", "latency"]
+ignores_context:
+  label: "Verilen bağlamı kullanmıyor, kendi bilgisinden cevaplıyor"
+  keywords: ["bağlamı yok sayıyor", "verdiğim bilgiyi kullanmıyor", "kendi bilgisinden", "kaynağı görmezden"]
+reranker_suspect:
+  label: "Sıralama / reranker şüpheli"
+  keywords: ["reranker", "sıralama", "yeniden sıralama", "rerank"]

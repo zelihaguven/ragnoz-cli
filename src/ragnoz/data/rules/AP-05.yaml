@@ -1,0 +1,20 @@
+id: AP-05
+title: "Reddetme mekanizması yok / zayıf"
+module: generation
+confidence_default: medium
+params:
+  min_unanswered: 5
+  min_not_refused: 1
+measured_template: "cevapsız soru {not_refused}/{unanswered} reddedilmedi"
+threshold_template: "≥{min_unanswered} cevapsız soru ve reddetme duyarlılığı <0.5"
+explanation: "Cevapsız gold sorulara sistem yanıt verdi."
+change: "Reddetme kuralı ve yapılandırılmış bulunamadı yanıtı ekleyin."
+alternatives: []
+risk: []
+experiment:
+  type: prompt_ab
+  stage: generation
+  success:
+    metric: abstain_recall
+    minimum: 0.8
+symptoms: [no_refusal]

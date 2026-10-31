@@ -1,0 +1,20 @@
+id: AP-12
+title: "Sayı çıkarma zayıf"
+module: generation
+confidence_default: medium
+params:
+  min_count: 3
+  min_fraction: 0.20
+measured_template: "GEN_NUMBER_EXTRACTION={count}/{total} sayısal soru"
+threshold_template: "≥{min_fraction:.0%} ve ≥{min_count} soru"
+explanation: "Kanıt bağlamdayken üretici beklenen değeri seçemedi."
+change: "Sayıyı kanıt alıntısıyla birlikte çıkaran istem ve yapılandırılmış çıktı deneyin."
+alternatives: []
+risk: []
+experiment:
+  type: prompt_ab
+  stage: generation
+  success:
+    metric: numeric_accuracy
+    context_fixed: true
+symptoms: [wrong_number]

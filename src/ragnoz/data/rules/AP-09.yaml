@@ -1,0 +1,18 @@
+id: AP-09
+title: "Reranker etkisiz olabilir"
+module: post_retrieval.rerank
+confidence_default: low
+params: {}
+measured_template: "aday ve son sırası aynı: {count}/{total}"
+threshold_template: "Rerank kazancı ≤0 veya beyan–iz çelişkisi"
+explanation: "Gözlenen aday sırası rerank sonrasında değişmedi."
+change: "Reranker'ı çıkarıp/değiştirip eşleştirilmiş deney yapın."
+alternatives: []
+risk: []
+experiment:
+  type: remove
+  stage: reranker
+  success:
+    test: mcnemar_exact
+    alpha: 0.05
+symptoms: [reranker_suspect]
