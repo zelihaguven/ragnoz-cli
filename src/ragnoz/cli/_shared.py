@@ -24,9 +24,11 @@ app = typer.Typer(no_args_is_help=True, help="Yerel-öncelikli RAG değerlendirm
 demo_cli = typer.Typer(no_args_is_help=True, help="Wikipedia mini-demo komutları")
 golden_cli = typer.Typer(no_args_is_help=True, help="Altın soru seti işlemleri")
 experiment_cli = typer.Typer(no_args_is_help=True, help="A/B öneri deneyleri")
+architecture_cli = typer.Typer(no_args_is_help=True, help="Mimari taslak onayı")
 app.add_typer(demo_cli, name="demo")
 app.add_typer(golden_cli, name="golden")
 app.add_typer(experiment_cli, name="experiment")
+app.add_typer(architecture_cli, name="architecture")
 console = Console()
 
 

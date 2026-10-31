@@ -48,7 +48,14 @@ def load_architecture(path: str | Path | None) -> dict[str, Any]:
     if not path:
         return {}
     raw = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
-    return raw if isinstance(raw, dict) else {}
+    if not isinstance(raw, dict):
+        return {}
+    if raw.get("inspected_draft"):
+        raise ValueError(
+            f"{path} bir inspect taslağıdır (ölçülmüş girdi değil). Önce onaylayın: "
+            "ragnoz architecture approve <taslak> --output architecture.yaml"
+        )
+    return raw
 
 
 def _module(profile: dict[str, Any], name: str) -> Any:

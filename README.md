@@ -72,6 +72,8 @@ ragnoz report --golden GOLDEN.jsonl --traces TRACES.jsonl [--redact]
 ragnoz experiment run REC-ID --golden GOLDEN.jsonl --before A.jsonl --after B.jsonl
 ragnoz experiment run REC-ID --golden GOLDEN.jsonl --adapter package.module:factory
 ragnoz ablate --type remove|swap|oracle-context|no-context --module MODULE --adapter package.module:factory --golden GOLDEN.jsonl
+ragnoz inspect adapter.py [--output architecture.draft.yaml]
+ragnoz architecture approve architecture.draft.yaml [--output architecture.yaml]
 ```
 
 Henüz golden set'in yoksa `golden quickstart`, gevşek bir CSV/JSONL/markdown soru-cevap listesini şemaya uygun bir `golden.jsonl`'a çevirir ve otomatik olarak `golden validate` çalıştırır; eksik/bozuk satırları satır numarasıyla bildirir. Derdini "elindeki golden set" veya "rule id" dilinde değil, kendi kelimelerinle anlatmak istiyorsan `triage` kullanılır — aşağıdaki örneklere bakın.
@@ -143,6 +145,43 @@ Bu şikayetle ilişkili, ölçülmüş bulgular (tam diagnose çıktısından fi
 
 Golden set ve iz dosyan varsa `triage` artık tahmin etmez: tam `ragnoz diagnose` çıktısını üretir ve şikayetinle eşleşen semptomların kuralları (`rules_by_symptom`) ile bulgu/öneri listesini filtreler. `AP-05` ve `AP-01` gibi şikayetle ilgisiz bulgular listeden düşer; hiçbiri uydurulmaz, hepsi `diagnose`'un ürettiği ölçülmüş kümenin bir alt kümesidir.
 
+## Mimariyi kodundan çıkarma: inspect ve onay
+
+Elle bir `architecture.yaml` yazmak istemiyorsan, `ragnoz inspect` adapter dosyanı statik olarak tarar. Tek kuralı şudur: **ne BULDUĞUNU söyler, ne ÇIKARDIĞINI söylemez.** Bilinen anahtar kelimeler (`top_k`, `chunk_size`, ...), importlar (`faiss`, `sentence_transformers`, ...) ve opsiyonel metod tanımları (`rerank`, `build_context`) için yalnız dosya+satır kanıtlı, ham bulgular üretir — mimari veya kalite hakkında hiçbir yorum yapmaz.
+
+```text
+$ ragnoz inspect my_adapter.py --output architecture.draft.yaml
+
+4 bulgu bulundu (dosya+satır kanıtlı): architecture.draft.yaml
+  my_adapter.py:1  indexing.import = faiss
+  my_adapter.py:6  retrieval.top_k = 8
+  my_adapter.py:6  indexing.chunking.chunk_size = 512
+  my_adapter.py:11  post_retrieval.rerank.method_present = rerank
+Bu bir TASLAKTIR, ölçülmüş girdi değil. Onaylamak için: ragnoz architecture approve architecture.draft.yaml --output architecture.yaml
+```
+
+Çıkan `architecture.draft.yaml` dosyası `inspected_draft: true` işaretini taşır. `diagnose`/`triage`/`report` bu işareti gördüğünde **çalışmayı reddeder** — taslak hiçbir şekilde sessizce ölçülmüş girdi sayılamaz, bu tip seviyesinde zorlanan bir kuraldır, sadece bir dosya adı kuralı değildir:
+
+```text
+$ ragnoz diagnose --golden GOLDEN.jsonl --traces TRACES.jsonl --architecture architecture.draft.yaml
+
+Mimari dosyası kullanılamadı: architecture.draft.yaml bir inspect taslağıdır (ölçülmüş girdi değil). Önce onaylayın: ragnoz architecture approve <taslak> --output architecture.yaml
+```
+
+Taslağı gözden geçirip onaylamak — yani bulguların artık güvenilir bir beyan olduğuna karar vermek — kullanıcının açık eylemidir:
+
+```text
+$ ragnoz architecture approve architecture.draft.yaml --output architecture.yaml
+
+Onaylandı: architecture.draft.yaml → architecture.yaml
+Bundan sonra bu dosyadaki alanlar `ragnoz diagnose --architecture` için yüksek güvenli beyan sayılır.
+  modules.indexing.chunking: {'import': 'faiss', 'chunk_size': '512'}
+  modules.retrieval.retriever: {'top_k': '8'}
+  modules.post_retrieval.reranker: {'method_present': 'rerank'}
+```
+
+`ragnoz diagnose --architecture architecture.yaml` artık bu alanları `source: declaration, confidence: high` olarak kullanır — tam olarak elle yazılmış bir mimari beyanı gibi. Onay adımını atlamak mümkün değildir; `diagnose` taslağı doğrudan verirse hata verir.
+
 ## Çıktılar ve gizlilik
 
 - `.ragnoz/`: yerel cache, `traces.jsonl`, soru bazlı `results.jsonl`, `metrics.json`, `diagnosis.json`, `summary.md` ve deney çıktıları; git dışı.
@@ -156,6 +195,7 @@ Golden set ve iz dosyan varsa `triage` artık tahmin etmez: tam `ragnoz diagnose
 - Demo fikstürleri gerçek referans motor kıyaslaması değildir. Wikipedia içerik indirme ve canlı demo adapter’ı yalnız `demo init` sonrasında kullanılabilir.
 - Ablation/A-B’nin canlı sistemde çalışması adapter hook’larına bağlıdır. Yalnız trace karşılaştırması yapılabiliyorsa CLI bunu dış çalıştırılmış A/B olarak ele alır; causal iddia üretmez.
 - PRD’nin tam 19 anti-pattern kataloğu, LLM-yargıç kalibrasyonu, geniş probing/arama ve paylaşılabilir web arayüzü v0.2+ kapsamıdır. `visual_agent` yalnız opsiyonel bir vaka çalışmasıdır ve varsayılan bağımlılık değildir.
+- `inspect` yalnız sabit bir anahtar kelime/import/metod-adı listesiyle AST üzerinde desen eşler; dinamik olarak oluşturulan config (ör. bir ortam değişkeninden okunan `top_k`) veya tanınmayan isimler bulunamaz ve sessizce atlanır — bu durumda mimari bilinmiyor olarak kalır, yanlış tahmin edilmez.
 
 ## Lisanslar
 

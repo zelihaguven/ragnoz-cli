@@ -18,13 +18,21 @@ from ragnoz.reports import write_html
 from ragnoz.schemas import ItemEvaluation
 
 
+def _load_architecture_or_exit(architecture: Path | None) -> dict:
+    try:
+        return load_architecture(architecture)
+    except ValueError as exc:
+        console.print(f"[red]Mimari dosyası kullanılamadı:[/red] {exc}")
+        raise typer.Exit(1) from exc
+
+
 @app.command("diagnose")
 def diagnose_command(traces: Path = typer.Option(..., "--traces", exists=True, readable=True), golden: Path = typer.Option(..., "--golden", exists=True, readable=True), architecture: Path | None = typer.Option(None, "--architecture", exists=True, readable=True), output: Path = typer.Option(Path(".ragnoz/diagnosis.json"), "--output")) -> None:
     items = load_golden(golden)
     trace_rows = _read_traces(traces)
     evaluated = evaluate(items, trace_rows)
     eval_models = [ItemEvaluation(**row) for row in evaluated["items"]]
-    profile = load_architecture(architecture)
+    profile = _load_architecture_or_exit(architecture)
     result = run_diagnosis(items, trace_rows, eval_models, profile, run_id=traces.stem)
     _json_write(output, result)
     console.print(f"Mimari: {result['profile']['paradigm']} · akış: {result['profile']['flow']} · gözlem: {result['profile']['observability']}")
@@ -49,7 +57,7 @@ def triage_command(
         trace_rows = _read_traces(traces)
         evaluated = evaluate(items, trace_rows)
         eval_models = [ItemEvaluation(**row) for row in evaluated["items"]]
-        result = run_diagnosis(items, trace_rows, eval_models, load_architecture(architecture), run_id=traces.stem)
+        result = run_diagnosis(items, trace_rows, eval_models, _load_architecture_or_exit(architecture), run_id=traces.stem)
         filtered = filter_diagnosis_by_complaint(complaint, result)
         console.print(f"Eşleşen semptom(lar): {', '.join(filtered['matched_symptoms']) or 'yok'}")
         if not filtered["findings"]:
@@ -81,7 +89,7 @@ def report_command(traces: Path = typer.Option(..., "--traces", exists=True, rea
     trace_rows = _read_traces(traces)
     result = evaluate(items, trace_rows)
     eval_models = [ItemEvaluation(**row) for row in result["items"]]
-    diagnosis = run_diagnosis(items, trace_rows, eval_models, load_architecture(architecture), run_id=traces.stem)
+    diagnosis = run_diagnosis(items, trace_rows, eval_models, _load_architecture_or_exit(architecture), run_id=traces.stem)
     write_html(output, result, diagnosis, redact=redact)
     console.print(f"Tek dosyalı çevrimdışı HTML rapor yazıldı: {output}")
     if not redact:
