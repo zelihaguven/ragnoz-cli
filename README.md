@@ -21,13 +21,13 @@ ragnoz --help
 ragnoz demo run --pipeline all
 ```
 
-Bu komut ağ, API anahtarı ve model olmadan 40 soruluk sabit fikstür izlerini değerlendirme/teşhis akışından geçirir. `naive`, `advanced`, `broken` hatları ve bunların sonuçları **sentetik demonstrasyon fikstürleridir; gerçek Wikipedia arama/üretici performans ölçümü değildir.** Girdi soruları, beklenen yanıtlar ve lisanslı alıntılar `examples/demo/golden.jsonl` içinde; makale revision kimlikleri ve atıflar `examples/demo/SOURCES.md` ile `examples/demo/wiki-mini.revisions.json` içindedir. Makale metni depoya eklenmez.
+Bu komut ağ, API anahtarı ve model olmadan 40 soruluk sabit fikstür izlerini değerlendirme/teşhis akışından geçirir. `naive`, `advanced`, `broken` hatları ve bunların sonuçları **sentetik demonstrasyon fikstürleridir; gerçek Wikipedia arama/üretici performans ölçümü değildir.** Girdi soruları, beklenen yanıtlar ve lisanslı alıntılar `src/ragnoz/data/demo/golden.jsonl` içinde; makale revision kimlikleri ve atıflar `src/ragnoz/data/demo/SOURCES.md` ile `src/ragnoz/data/demo/wiki-mini.revisions.json` içindedir. Makale metni depoya eklenmez.
 
 Sabit revision’lardan yerel demo korpusunu edinmek için (yalnız bu komut ağ kullanır):
 
 ```bash
 ragnoz demo init
-ragnoz run --golden examples/demo/golden.jsonl --adapter examples/demo/adapter.py:build_demo_adapter
+ragnoz run --golden src/ragnoz/data/demo/golden.jsonl --adapter src/ragnoz/data/demo/adapter.py:build_demo_adapter
 ```
 
 `demo init` makale metinlerini `.ragnoz/demo-corpus/` altında tutar. Bu klasör git dışıdır. Wikimedia 429 yanıt verirse araç `Retry-After` başlığını ve artan beklemeyi izler; işlem yarıda kalırsa aynı komut tekrar çalıştırılabilir. Wikipedia metni CC BY-SA 4.0 koşullarına tabidir; CLI indirme klasörüne `ATTRIBUTION.md` yazar.
@@ -95,8 +95,8 @@ Aşağıdaki çıktılar gerçek komut çalıştırmalarından alınmıştır (d
 ### `ragnoz diagnose` — tam, ölçülmüş teşhis
 
 ```text
-$ ragnoz diagnose --golden examples/demo/golden.jsonl --traces .ragnoz/demo-traces/broken.jsonl \
-    --architecture examples/demo/pipelines/broken.yaml
+$ ragnoz diagnose --golden src/ragnoz/data/demo/golden.jsonl --traces .ragnoz/demo-traces/broken.jsonl \
+    --architecture src/ragnoz/data/demo/pipelines/broken.yaml
 
 Mimari: Naive · akış: linear · gözlem: L3
 Bulgular: 4 · öneriler: 4
@@ -132,8 +132,8 @@ Golden set ve iz dosyan yoksa `triage` sana sadece **nereye bakman gerektiğini*
 ### `ragnoz triage` — veri varken (gerçek diagnose çıktısından filtrelenmiş)
 
 ```text
-$ ragnoz triage "cevaplar alakasız geliyor" --golden examples/demo/golden.jsonl \
-    --traces .ragnoz/demo-traces/broken.jsonl --architecture examples/demo/pipelines/broken.yaml
+$ ragnoz triage "cevaplar alakasız geliyor" --golden src/ragnoz/data/demo/golden.jsonl \
+    --traces .ragnoz/demo-traces/broken.jsonl --architecture src/ragnoz/data/demo/pipelines/broken.yaml
 
 Eşleşen semptom(lar): irrelevant_answer
 Bu şikayetle ilişkili, ölçülmüş bulgular (tam diagnose çıktısından filtrelendi):
@@ -199,4 +199,4 @@ Bundan sonra bu dosyadaki alanlar `ragnoz diagnose --architecture` için yüksek
 
 ## Lisanslar
 
-RAGnoz kodu kök `LICENSE` dosyasındaki MIT lisansı altındadır. Demo soru/alinti verisi kaynak revision’larına göre CC BY-SA 4.0 koşullarına tabidir; ayrıntı için `examples/demo/SOURCES.md`.
+RAGnoz kodu kök `LICENSE` dosyasındaki MIT lisansı altındadır. Demo soru/alinti verisi kaynak revision’larına göre CC BY-SA 4.0 koşullarına tabidir; ayrıntı için `src/ragnoz/data/demo/SOURCES.md`.

@@ -59,6 +59,29 @@ def test_synthetic_demo_ab_does_not_raise_confidence_to_high(tmp_path: Path):
     assert record["confidence_after_experiment"] == "medium"
 
 
+def test_golden_quickstart_below_min_records_warns_about_low_confidence(tmp_path: Path):
+    source = tmp_path / "qa.csv"
+    source.write_text("question,answer\nQ1?,A1\nQ2?,A2\n", encoding="utf-8")
+    output = tmp_path / "golden.jsonl"
+    result = runner.invoke(app, ["golden", "quickstart", "--from", str(source), "--output", str(output)])
+    assert result.exit_code == 0, result.output
+    assert "2 kayıt" in result.output
+    normalized = " ".join(result.output.split())
+    assert "Uyarı: 2 kayıt" in normalized
+    assert "düşük güvenli" in normalized
+
+
+def test_golden_quickstart_at_or_above_min_records_does_not_warn(tmp_path: Path):
+    rows = "\n".join(f"Q{i}?,A{i}" for i in range(1, 6))
+    source = tmp_path / "qa.csv"
+    source.write_text("question,answer\n" + rows + "\n", encoding="utf-8")
+    output = tmp_path / "golden.jsonl"
+    result = runner.invoke(app, ["golden", "quickstart", "--from", str(source), "--output", str(output)])
+    assert result.exit_code == 0, result.output
+    assert "5 kayıt" in result.output
+    assert "Uyarı" not in result.output
+
+
 def test_golden_quickstart_from_csv_writes_file_runs_validate_and_reports_line_errors(tmp_path: Path):
     source = tmp_path / "qa.csv"
     source.write_text("id,question,answer\nq-1,First question?,A\n,,Should be skipped\nq-1,Second question?,B\n")

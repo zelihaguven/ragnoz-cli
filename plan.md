@@ -37,8 +37,8 @@ ragnoz-cli/
 │   ├── compare.py, statistics.py  # Soru geçişleri ve eşleştirilmiş istatistik
 │   ├── diagnosis/engine.py        # Mimari keşfi ve 11 çekirdek kural
 │   ├── reports/html.py            # Tek dosya çevrimdışı HTML raporu
-│   └── data/demo/                 # Pip’e dahil gold set, sabit revision manifesti ve örnek
-├── examples/demo/                 # YAML profilleri, kaynak/attribution ve adapter quickstart
+│   └── data/demo/                 # Tek kaynak: gold set, sabit revision manifesti, YAML profilleri,
+│                                   # kaynak/attribution ve örnek adapter (pip'e dahil, wheel'de de var)
 └── tests/                         # Şema, metrik, cache, runner, teşhis, demo ve CLI
 ```
 

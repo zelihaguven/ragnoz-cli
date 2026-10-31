@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ragnoz"
-version = "0.1.0"
+version = "0.2.0"
 description = "A local-first RAG evaluation, attribution, and architecture diagnosis CLI"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -51,3 +51,12 @@ ignore = ["B008"]
 [tool.coverage.run]
 source = ["ragnoz"]
 branch = true
+omit = [
+  # Bundled example/data module for end users (`ragnoz.data.demo:build_demo_adapter`),
+  # not exercised by RAGnoz's own test suite and not part of its measured logic.
+  "*/ragnoz/data/demo/adapter.py",
+  "*/ragnoz/data/demo/__init__.py",
+]
+
+[tool.coverage.report]
+fail_under = 85

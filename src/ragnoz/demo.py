@@ -8,11 +8,15 @@ from ragnoz.golden import load_golden
 from ragnoz.schemas import GoldenItem, QuestionTrace, ScoredChunk
 
 PACKAGE_DEMO = Path(__file__).parent / "data" / "demo"
-PROJECT_DEMO = Path(__file__).resolve().parents[2] / "examples" / "demo"
 
 
 def demo_path() -> Path:
-    return PACKAGE_DEMO if (PACKAGE_DEMO / "golden.jsonl").exists() else PROJECT_DEMO
+    """Single source of truth for demo fixtures: the packaged `ragnoz.data.demo` directory.
+
+    Ships inside the wheel (see `[tool.setuptools.package-data]` in pyproject.toml), so it is
+    available identically whether RAGnoz is installed editable or from a built distribution.
+    """
+    return PACKAGE_DEMO
 
 
 def load_demo_items() -> list[GoldenItem]:

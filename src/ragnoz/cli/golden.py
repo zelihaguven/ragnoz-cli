@@ -10,6 +10,8 @@ from ragnoz.cli._shared import console, golden_cli
 from ragnoz.golden import golden_hash, load_corpus_json, load_golden, validate_golden
 from ragnoz.golden_quickstart import build_golden_items
 
+MIN_RECOMMENDED_RECORDS = 5
+
 
 @golden_cli.command("validate")
 def golden_validate(path: Path = typer.Argument(..., exists=True, readable=True), corpus: Path | None = typer.Option(None, "--corpus", exists=True, readable=True)) -> None:
@@ -47,6 +49,12 @@ def golden_quickstart(
         for item in result.items:
             stream.write(json.dumps(item.model_dump(mode="json", exclude_none=True), ensure_ascii=False, sort_keys=True) + "\n")
     console.print(f"{len(result.items)} kayıt {output} dosyasına yazıldı.")
+    if 0 < len(result.items) < MIN_RECOMMENDED_RECORDS:
+        console.print(
+            f"[yellow]Uyarı: {len(result.items)} kayıt, önerilen alt sınırın (≥{MIN_RECOMMENDED_RECORDS}) altında.[/yellow] "
+            "Bu boyutta ölçümler düşük güvenli kalır (n küçükken Wilson/McNemar aralıkları geniş olur); "
+            "mümkünse en az 5-10 soru-cevap ekleyin."
+        )
     if result.errors:
         console.print(f"[yellow]{len(result.errors)} satır atlandı:[/yellow]")
         for error in result.errors:

@@ -9,6 +9,7 @@ from typing import Any
 import typer
 from rich.table import Table
 
+from ragnoz import __version__
 from ragnoz.cache import StageCache
 from ragnoz.cli._shared import (
     _evaluate_adapter_instance,
@@ -63,7 +64,7 @@ def evaluate_command(golden: Path = typer.Option(..., "--golden", exists=True, r
     _json_write(run_dir / "metrics.json", result["metrics"])
     _json_write(run_dir / "manifest.json", {"run_id": run_id, "created_utc": datetime.now(UTC).isoformat(),
         "golden_sha256": golden_hash(items), "golden_count": len(items), "trace_count": len(trace_rows),
-        "tool_version": "0.1.0", "seed": 0, "source": str(traces)})
+        "tool_version": __version__, "seed": 0, "source": str(traces)})
     with (run_dir / "results.jsonl").open("w", encoding="utf-8", newline="\n") as stream:
         for row in result["items"]:
             stream.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
@@ -99,7 +100,7 @@ def run_command(
     _json_write(run_dir / "manifest.json", {
         "run_id": run_id, "created_utc": datetime.now(UTC).isoformat(), "adapter": adapter,
         "golden_sha256": golden_hash(items), "golden_count": len(items), "trace_count": len(traces),
-        "tool_version": "0.1.0", "cache": diagnosis["cache"], "cache_disabled": no_cache,
+        "tool_version": __version__, "cache": diagnosis["cache"], "cache_disabled": no_cache,
     })
     console.print(f"Cache: {diagnosis['cache']['hits']} isabet · {diagnosis['cache']['misses']} kaçırma")
     console.print(f"Run {run_id}: {run_dir}")
